@@ -1,0 +1,33 @@
+#!/bin/bash
+# pre commit hook that checks for credentials and keys in staged files
+# using https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf for regex for AWS ACCESS KEY and AWS SECRET KEY ID
+
+function join_by { local IFS="$1"; shift; echo "$*"; }
+
+declare -a errors=()
+repo_path=$(git rev-parse --show-toplevel)
+
+if [ -f ${repo_path}/.secretignore ];then
+  secretignore=$(cat ${repo_path}/.secretignore)
+fi
+
+for changed_file in $(git diff --cached --name-status --diff-filter=d | awk -F' ' '{print $2}'); do
+  full_file_path=${repo_path}/${changed_file}
+  ignore=$(echo ${secretignore} | grep -e "^${changed_file}$")
+  if [ -z ${ignore} ];then # did not appear in the ignore file
+    aws_access_key_lines=$(grep -nE 'AKIA[0-9A-Z]{16}' ${full_file_path} | cut -f1 -d:)
+    if [[ -n ${aws_access_key_lines} ]]; then
+      errors+=("AWS ACCESS KEY ID: ${changed_file}[$(join_by "," ${aws_access_key_lines})]")
+    fi
+    aws_secret_key_lines=$(grep -nE '[0-9a-zA-Z/+]{40}' ${full_file_path} | cut -f1 -d:)
+    if [[ -n ${aws_secret_key_lines} ]]; then
+      errors+=("AWS SECRET KEY: ${changed_file}[$(join_by "," ${aws_secret_key_lines})]")
+    fi
+  fi
+done
+
+if [[ -n ${#errors[@]} ]];then
+  echo "Possible credentials found in staged files:"
+  printf '%s\n' "${errors[@]}"
+  exit 1
+fi

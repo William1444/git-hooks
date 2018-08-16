@@ -1,1 +1,6 @@
-This will check for files that have been changed and then for each file, check that nothing in there looks like an AWS ACCESS KEY
+# pre commit hook: aws secrets
+pre receive hook to check staged files for regex that match AWS SECRET ACCESS KEY and AWS_ACCESS_KEY_ID.
+
+## tbc
+
+Expand to check for rsa keys etc

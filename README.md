@@ -7,6 +7,8 @@ The recommended approach for sharing git hooks is to create a git hooks director
 
 ```bash
 mkdir .githooks
+cp ${path_to_this_repo}/pre-commit .githooks/pre-commit
+chmod +x .githooks/pre-commit
 ```
 
 Drop the pre-commit hook file in this directory.

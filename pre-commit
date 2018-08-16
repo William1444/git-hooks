@@ -8,12 +8,14 @@ declare -a errors=()
 repo_path=$(git rev-parse --show-toplevel)
 
 if [ -f ${repo_path}/.secretignore ];then
-  secretignore=$(cat ${repo_path}/.secretignore)
+  check_ignore=yes
 fi
 
 for changed_file in $(git diff --cached --name-status --diff-filter=d | awk -F' ' '{print $2}'); do
   full_file_path=${repo_path}/${changed_file}
-  ignore=$(echo ${secretignore} | grep -e "^${changed_file}$")
+  if [ ${check_ignore} == 'yes' ];then
+    ignore=$(grep -e "^${changed_file}$" ${repo_path}/.secretignore)
+  fi
   if [ -z ${ignore} ];then # did not appear in the ignore file
     aws_access_key_lines=$(grep -nE 'AKIA[0-9A-Z]{16}' ${full_file_path} | cut -f1 -d:)
     if [[ -n ${aws_access_key_lines} ]]; then

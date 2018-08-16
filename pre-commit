@@ -26,7 +26,7 @@ for changed_file in $(git diff --cached --name-status --diff-filter=d | awk -F' 
   fi
 done
 
-if [[ -n ${#errors[@]} ]];then
+if [[ ${#errors[@]} != 0 ]];then
   echo "Possible credentials found in staged files:"
   printf '%s\n' "${errors[@]}"
   exit 1
